@@ -25,14 +25,14 @@ const qdrant = new QdrantClient({
 });
 
 // ---------- Utility Functions ----------
-// async function listTextFiles(dir) {
-//   return new Promise((resolve, reject) => {
-//     glob(`${dir}/**/*.txt`, (err, files) => {
-//       if (err) reject(err);
-//       else resolve(files);
-//     });
-//   });
-// }
+async function listTextFiles(dir) {
+  return new Promise((resolve, reject) => {
+    glob(`${dir}/**/*.txt`, (err, files) => {
+      if (err) reject(err);
+      else resolve(files);
+    });
+  });
+}
 
 async function listTextFiles(dir) {
   return await glob("*.txt", {

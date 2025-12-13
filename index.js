@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv"
 import {v4 as uuidv4 } from "uuid";
 import { QdrantClient } from "@qdrant/js-client-rest";
-import { redisClient } from "./redis";
+import { redisClient } from "./redis.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { embedText } from "./ingest";
+
 
 dotenv.config();
 
@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json())
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const gemini = genAI.getGenerativeModel({model:"gemini-1.5-flash"})
+const gemini = genAI.getGenerativeModel({model:"gemini-2.5-flash"})
 
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL,
@@ -26,11 +26,29 @@ const qdrant = new QdrantClient({
 const SESSION_KEY = (id) => `session:${id}:history`;
 const TTL_SECONDS = 3600;
 
+async function embed(text) {
+  const r = await fetch("https://api.jina.ai/v1/embeddings", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.JINA_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "jina-embeddings-v3",
+      input: [text],
+    }),
+  });
+  const j = await r.json();
+  return j.data[0].embedding;
+}
+
+
 //routes
 
 //create session
 app.post("/session", async (req,res) => {
     const id = uuidv4();
+    console.log(id)
     await redisClient.del(SESSION_KEY(id))
     res.json({sessonId:id})
 })
@@ -56,7 +74,10 @@ app.post("/session/:id/chat",async (req,res) => {
     await redisClient.rPush(SESSION_KEY(sessionId),JSON.stringify({role:"user", text:message}))
     await redisClient.expire(SESSION_KEY(sessionId), TTL_SECONDS)
 
-    const queryVector = await embedText(message)
+    const queryVector = await embed(message)
+
+    console.log("Query vector length:", queryVector.length);
+
 
     const results = await qdrant.search(process.env.COLLECTION_NAME,{
         vector:queryVector,
@@ -88,4 +109,8 @@ await redisClient.expire(SESSION_KEY(sessionId), TTL_SECONDS)
 
 res.json({answer,sources})
 })
+
+app.listen(process.env.PORT || 3000, () =>
+  console.log("Server running on port", process.env.PORT)
+);
 
