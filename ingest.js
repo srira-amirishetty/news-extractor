@@ -59,7 +59,7 @@ function chunkText(text, chunkSize = 800, overlap = 150) {
   return chunks;
 }
 
-async function embedText(textArray) {
+export async function embedText(textArray) {
   const response = await axios.post(
     "https://api.jina.ai/v1/embeddings",
     {
