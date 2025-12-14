@@ -1,3 +1,48 @@
+**Cloning the Repository**
+
+```bash
+git clone https://github.com/srira-amirishetty/gta_vi_landing_page_animation.git
+cd news-extractor
+```
+
+**Installation**
+
+Frontend SetUp
+
+```bash
+cd frontend/frontend
+npm install
+```
+Frontend Environment Variables
+
+create .env file and paste
+
+```bash
+VITE_API_URL=http://localhost:3000
+```
+Backend Setup
+
+open new terminal and run 
+
+ ```bash
+npm install
+```
+Backend Environment Variables
+
+create .env file and paste
+
+```bash
+JINA_API_KEY=your_jina_api_key
+QDRANT_URL=your_qdrant_url
+QDRANT_API_KEY=yout_qdrant_api_key
+COLLECTION_NAME=news_articles
+GEMINI_API_KEY=your_gemini_api_key
+REDIS_URL=your_redis_url
+PORT=3000
+```
+
+
+
 Below is a clean, professional GitHub README tailored for your assignment.
 You can paste it directly into your project’s README.md.
 
