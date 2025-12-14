@@ -24,9 +24,6 @@ npm run dev
 
 Backend Setup
 
-open new terminal and run 
-
-
 Backend Environment Variables
 
 create .env file and paste
@@ -40,8 +37,7 @@ GEMINI_API_KEY=your_gemini_api_key
 REDIS_URL=your_redis_url
 PORT=3000
 ```
-
-For Running Backend
+Open new terminal and run 
 
  ```bash
 npm install
