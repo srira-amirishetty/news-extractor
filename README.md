@@ -4,6 +4,13 @@
 git clone https://github.com/srira-amirishetty/gta_vi_landing_page_animation.git
 cd news-extractor
 ```
+Frontend Environment Variables
+
+create .env file and paste
+
+```bash
+VITE_API_URL=http://localhost:3000
+```
 
 **Installation**
 
@@ -12,21 +19,14 @@ Frontend SetUp
 ```bash
 cd frontend/frontend
 npm install
+npm run dev
 ```
-Frontend Environment Variables
 
-create .env file and paste
-
-```bash
-VITE_API_URL=http://localhost:3000
-```
 Backend Setup
 
 open new terminal and run 
 
- ```bash
-npm install
-```
+
 Backend Environment Variables
 
 create .env file and paste
@@ -41,6 +41,20 @@ REDIS_URL=your_redis_url
 PORT=3000
 ```
 
+For Running Backend
+
+ ```bash
+npm install
+nodemon index.js
+```
+
+For News Ingestion
+
+open new terminal and run
+
+ ```bash
+node ingest.js
+```
 
 
 Below is a clean, professional GitHub README tailored for your assignment.
