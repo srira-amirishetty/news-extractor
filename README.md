@@ -1,7 +1,7 @@
 **Cloning the Repository**
 
 ```bash
-git clone https://github.com/srira-amirishetty/gta_vi_landing_page_animation.git
+git clone https://github.com/srira-amirishetty/gta_vi_landing_page_animation.git](https://github.com/srira-amirishetty/news-extractor.git
 cd news-extractor
 ```
 Frontend Environment Variables
