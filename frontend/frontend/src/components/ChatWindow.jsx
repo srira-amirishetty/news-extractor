@@ -19,12 +19,12 @@ useEffect(() => {
 
     console.log(id)
 
-    // if (!id) {
+    if (!id) {
       const s = await createSession();
       id = s.sessonId;
       console.log("id",id,s.sessonId)
       localStorage.setItem("sessionId", id);
-    // }
+    }
 
     setSessionId(id);
 
