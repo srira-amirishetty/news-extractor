@@ -8,6 +8,8 @@ import {
   resetSession,
 } from "../api";
 
+const API_URL = import.meta.env.VITE_API_URL; 
+
 export default function ChatWindow() {
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -41,19 +43,62 @@ useEffect(() => {
 
 
 
-  const handleSend = async (msg) => {
-    const userMsg = { role: "user", text: msg };
+const handleSend = async (msg) => {
+  const userMsg = { role: "user", text: msg };
+  setMessages((prev) => [...prev, userMsg]);
 
-    setMessages((p) => [...p, userMsg]);
-    setTyping(true);
+  let botText = "";
+  setTyping(true);
 
-    const response = await sendMessage(sessionId, msg);
+  const response = await fetch(`${API_URL}/session/${sessionId}/chat/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: msg }),
+  });
 
-    const botMsg = { role: "assistant", text: response.answer };
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
 
-    setMessages((p) => [...p, botMsg]);
-    setTyping(false);
-  };
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+
+    // parse SSE "data: {...}"
+    const lines = chunk.split("\n");
+
+    for (const line of lines) {
+      if (line.startsWith("data:")) {
+        const data = line.replace("data:", "").trim();
+
+        if (data === "[DONE]") {
+          setTyping(false);
+          return;
+        }
+
+        try {
+          const tokenObj = JSON.parse(data);
+          botText += tokenObj.token;
+
+          // live update typing
+          setMessages((prev) => {
+            const copy = [...prev];
+            // replace last bot message or create one
+            const last = copy[copy.length - 1];
+            if (last && last.role === "assistant") {
+              last.text = botText;
+            } else {
+              copy.push({ role: "assistant", text: botText });
+            }
+            return copy;
+          });
+        } catch {}
+      }
+    }
+  }
+};
+
 
   const handleReset = async () => {
     await resetSession(sessionId);

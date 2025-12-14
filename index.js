@@ -110,6 +110,74 @@ await redisClient.expire(SESSION_KEY(sessionId), TTL_SECONDS)
 res.json({answer,sources})
 })
 
+app.post("/session/:id/chat/stream", async (req, res) => {
+  const sessionId = req.params.id;
+  const message = req.body.message;
+
+  // SSE headers for streaming
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+
+  // Save user message to Redis
+  await redisClient.rPush(
+    SESSION_KEY(sessionId),
+    JSON.stringify({ role: "user", text: message })
+  );
+  await redisClient.expire(SESSION_KEY(sessionId), TTL_SECONDS);
+
+  // 1️⃣ Embed query
+  const queryVector = await embed(message);
+
+  // 2️⃣ Retrieve context from Qdrant
+  const searchResults = await qdrant.search(process.env.COLLECTION_NAME, {
+    vector: queryVector,
+    limit: 5,
+  });
+
+  const context = searchResults.map((r) => r.payload.text).join("\n---\n");
+
+  // 3️⃣ Build prompt
+  const prompt = `
+Use ONLY the context to answer.
+
+CONTEXT:
+${context}
+
+QUESTION:
+${message}
+
+If answer not present, say "No information found."
+`;
+
+  // 4️⃣ Streaming from Gemini
+  const stream = await gemini.generateContentStream(prompt);
+
+  let finalAnswer = "";
+
+  for await (const chunk of stream.stream) {
+    const part = chunk.text();
+    finalAnswer += part;
+
+    // send partial token to frontend
+    res.write(`data: ${JSON.stringify({ token: part })}\n\n`);
+  }
+
+  // Save final assistant message
+  await redisClient.rPush(
+    SESSION_KEY(sessionId),
+    JSON.stringify({ role: "assistant", text: finalAnswer })
+  );
+  await redisClient.expire(SESSION_KEY(sessionId), TTL_SECONDS);
+
+  // End SSE stream
+  res.write(`data: [DONE]\n\n`);
+  res.end();
+});
+
+
 app.listen(process.env.PORT || 3000, () =>
   console.log("Server running on port", process.env.PORT)
 );
